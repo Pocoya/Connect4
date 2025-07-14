@@ -57,7 +57,7 @@ class Connect4Env(gym.Env):
             done = True
             return next_obs, reward, done, {}
         
-        # None of the abve, game continues and the reward is 0 for this non-terminal move
+        # I none of the abve, game continues and the reward is 0 for this non-terminal move
         self.current_player *= -1
         next_obs = self._get_observation()
         reward = 0.0
