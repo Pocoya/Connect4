@@ -94,16 +94,19 @@ class DQNAgent:
         :param epsilon: exploration probability
         :param valid_actions: list of legal action indices
         """
+        if not valid_actions:
+            raise ValueError("select_action called with no valid actions.")
+
         if random.random() < epsilon:
             return random.choice(valid_actions)
         else:
             self.online_net.eval() # Eval mode for inference ("thinking-only")
             with torch.no_grad(): # Do not calculate gradients for the following operations
-                state_tensor = torch.tensor(state_2d, dtype=torch.float32).unsqueeze(0).unsqueeze(0) .to(self.device)
+                state_tensor = torch.tensor(state_2d, dtype=torch.float32).unsqueeze(0).unsqueeze(0).to(self.device)
                 q_values = self.online_net(state_tensor).cpu().squeeze(0)
 
                 # Mask invalid actions by setting their Q-values to -infinity
-                masked_q_values = torch.full_like(q_values, -float('-inf'))
+                masked_q_values = torch.full_like(q_values, -float('inf'))
                 # Copy Q-values for valid actions
                 valid_actions_tensor = torch.tensor(valid_actions, dtype=torch.long)
                 masked_q_values[valid_actions_tensor] = q_values[valid_actions_tensor]
@@ -112,7 +115,6 @@ class DQNAgent:
             
             self.online_net.train() # Back to training mode
             return best_action
-    
 
     def learn(self):
         if len(self.replay_buffer) < self.batch_size:
@@ -164,6 +166,6 @@ class DQNAgent:
         return loss.item()
     
 
-    def store_transitions(self, state, action, reward, next_state, done):
+    def store_transition(self, state, action, reward, next_state, done):
         self.replay_buffer.push(state, action, reward, next_state, done)
 
