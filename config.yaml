@@ -1,0 +1,28 @@
+training:
+  num_total_episodes: 10001
+  # To resume, set path: "checkpoints/your_checkpoint.pth" or null/None for new training
+  checkpoint_path_to_load: null #checkpoints/checkpoint_200000.pth
+
+
+environment:
+  rows: 6
+  cols: 7
+  win_length: 4
+
+
+agent:
+  learning_rate: 0.0002
+  gamma: 0.99
+  replay_buffer_capacity: 1000000
+  batch_size: 256
+  target_update_freq: 1000
+
+
+trainer:
+  epsilon_start: 1.0
+  epsilon_end: 0.05
+  epsilon_decay_episodes: 100000
+  checkpoint_dir: "checkpoints"
+  save_freq: 1000
+  print_freq: 100
+  log_dir: "runs"
