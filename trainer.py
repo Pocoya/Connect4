@@ -75,6 +75,7 @@ class Trainer:
         self.checkpoint_dir = trainer_config['checkpoint_dir']
         os.makedirs(self.checkpoint_dir, exist_ok=True)
 
+
         self.history = {
             "episodes": [], "rewards": [], "episode_steps": [],
             "epsilon_values": [], "results": [],
@@ -277,6 +278,7 @@ class Trainer:
                     self.save_checkpoint(self.episode)
                     self.save_model_play(model_filename=f"model_inference_{self.episode}.pth")
                     print(f"Checkpoint saved for episode {self.episode}")
+
         except KeyboardInterrupt:
             print("\nTraining interrupted by user.")
         finally:
@@ -289,6 +291,7 @@ class Trainer:
             exit()
 
 
+
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Training a Connect4 DQN agent.")
     parser.add_argument("--config", type=str, default="config.yaml", help="Path to the configuration YAML file.")
@@ -297,3 +300,4 @@ if __name__ == "__main__":
     config_data = load_config(args.config)
     trainer = Trainer(config=config_data)
     trainer.train()
+

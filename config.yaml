@@ -1,7 +1,7 @@
 training:
-  num_total_episodes: 10001
+  num_total_episodes: 100001
   # To resume, set path: "checkpoints/your_checkpoint.pth" or null/None for new training
-  checkpoint_path_to_load: null #checkpoints/checkpoint_200000.pth
+  checkpoint_path_to_load: null #checkpoints/checkpoint_100000.pth
 
 
 environment:
@@ -21,8 +21,8 @@ agent:
 trainer:
   epsilon_start: 1.0
   epsilon_end: 0.05
-  epsilon_decay_episodes: 100000
+  epsilon_decay_episodes: 60000
   checkpoint_dir: "checkpoints"
-  save_freq: 1000
-  print_freq: 100
+  save_freq: 20000
+  print_freq: 1000
   log_dir: "runs"
