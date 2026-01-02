@@ -33,7 +33,6 @@ class Connect4Env(gym.Env):
             info (dict): Additional information (for debugging)
         """
         if not self._is_valid_action(action):
-            # Current player made an invalid move -> game ends -> LOSS
             obs = self._get_observation()
             reward = -10.0
             done = True
@@ -43,21 +42,18 @@ class Connect4Env(gym.Env):
         # Place the piece
         row_placed = self._place_piece(action, self.current_player)
         
-        # Check for win
         if self._check_win_from_move(row_placed, action, self.current_player):
             next_obs = self._get_observation()
             reward = 1.0
             done = True
             return next_obs, reward, done, {}
         
-        # If not win, check for draw
         if self._is_draw():
             next_obs = self._get_observation()
             reward = 0.0
             done = True
             return next_obs, reward, done, {}
         
-        # I none of the abve, game continues and the reward is 0 for this non-terminal move
         self.current_player *= -1
         next_obs = self._get_observation()
         reward = 0.0
@@ -76,8 +72,6 @@ class Connect4Env(gym.Env):
             print(f"{r} {row_str}")
         print("-" * (self.cols * 2 + 2))
         print(f"Current Player: {'X' if self.current_player == 1 else 'O'}")
-
-    # --------- Helper functions ---------
 
     def _get_observation(self):
         return self.board.copy() * self.current_player
