@@ -44,7 +44,6 @@ class ReplayBuffer:
     
     def sample(self, batch_size):
         transitions = random.sample(self.buffer, batch_size)
-        # Unzip and convert to numpy arrays
         states, actions, rewards, next_states, dones = map(np.array, zip(*transitions))
 
         # Add channel dimension for CNN: (B, H, W) -> (B, 1, H, W)
@@ -70,8 +69,6 @@ class DQNAgent:
         self.batch_size = batch_size
         self.target_update_freq = target_update_freq
         self.train_step_counter = 0
-
-        # For CNN, input_shape is (channels, height, width)
         # 1 channel (player 1 = 1, player -1 = -1, empty = 0)
         cnn_input_shape = (1, board_shape[0], board_shape[1])
 
@@ -100,25 +97,23 @@ class DQNAgent:
         if random.random() < epsilon:
             return random.choice(valid_actions)
         else:
-            self.online_net.eval() # Eval mode for inference ("thinking-only")
-            with torch.no_grad(): # Do not calculate gradients for the following operations
+            self.online_net.eval() 
+            with torch.no_grad(): 
                 state_tensor = torch.tensor(state_2d, dtype=torch.float32).unsqueeze(0).unsqueeze(0).to(self.device)
                 q_values = self.online_net(state_tensor).cpu().squeeze(0)
 
-                # Mask invalid actions by setting their Q-values to -infinity
                 masked_q_values = torch.full_like(q_values, -float('inf'))
-                # Copy Q-values for valid actions
                 valid_actions_tensor = torch.tensor(valid_actions, dtype=torch.long)
                 masked_q_values[valid_actions_tensor] = q_values[valid_actions_tensor]
 
                 best_action = int(masked_q_values.argmax().item())
             
-            self.online_net.train() # Back to training mode
+            self.online_net.train()
             return best_action
 
     def learn(self):
         if len(self.replay_buffer) < self.batch_size:
-            return None # Not enough sample to learn
+            return None
         
         self.online_net.train() 
 
@@ -129,31 +124,20 @@ class DQNAgent:
         rewards_t = torch.tensor(rewards, dtype=torch.float32).unsqueeze(1).to(self.device) # (B, 1)
         dones_t = torch.tensor(dones, dtype=torch.bool).unsqueeze(1).to(self.device) # (B, 1)
 
-        # --- Double DQN & Self-Play Target Calculation ---
+        # DDQN & Self-Play Target Calculation
         with torch.no_grad():
-            # 1. Select best actions in next_states_t using the online_net
             next_q_values_online = self.online_net(next_states_t)
             best_next_actions = next_q_values_online.argmax(dim=1, keepdim=True)
 
-            # 2. Evaluate these best_next_actions using the target_net
+            # Evaluate these best_next_actions using the target_net
             next_q_values_target = self.target_net(next_states_t).gather(1, best_next_actions)
-
-            # 3. Adjust for self-play: what's good for opponent is bad for current player
             adjusted_next_q = -next_q_values_target
-
-            # 4. Compute the target Q-value
-            # If done, target_q is just the reward.
-            # Otherwise, it's reward + gamma * (adjusted_next_q)
             target_q_values = rewards_t + (~dones_t) * self.gamma * adjusted_next_q
         
-        # --- Current Q values ---
-        # Q-values for the actions actually taken, from online_net
         current_q_values = self.online_net(states_t).gather(1, actions_t)
 
-        # --- Compute loss ---
         loss = F.smooth_l1_loss(current_q_values, target_q_values) # Huber loss, often more stable
 
-        # --- Optimize the model ---
         self.optimizer.zero_grad()
         loss.backward()
         torch.nn.utils.clip_grad_norm_(self.online_net.parameters(), max_norm=1.0) 
